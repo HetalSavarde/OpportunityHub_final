@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import Logo from "@/components/Logo";
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,18 +36,10 @@ const Navbar: React.FC<NavbarProps> = ({ searchQuery = '', onSearchChange, showS
       <div className="max-w-[1600px] mx-auto px-6">
         <div className="flex items-center justify-between h-16 gap-8">
           {/* Logo */}
-          <Link to="/home" className="flex items-center gap-2 shrink-0">
-            <div className="relative">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-                <span className="text-[#ffffff] font-bold text-lg">O</span>
-              </div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent-green rounded-full border-2 border-background" />
-            </div>
-            <div className="flex items-baseline">
-              <span className="text-xl font-bold text-primary-dark">Opportunity</span>
-              <span className="text-xl font-light text-foreground">Hub</span>
-            </div>
-          </Link>
+        <Link to="/home" className="flex items-center">
+  <Logo className="h-8 w-auto" />
+</Link>
+
 
           {/* Center Search */}
           {showSearch && onSearchChange && (
@@ -114,5 +107,4 @@ const Navbar: React.FC<NavbarProps> = ({ searchQuery = '', onSearchChange, showS
     </nav>
   );
 };
-
 export default Navbar;

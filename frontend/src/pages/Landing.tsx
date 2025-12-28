@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight, Target, FileText, Calendar, Users } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 const Landing = () => {
   const { isAuthenticated } = useAuth();
@@ -52,18 +53,13 @@ const Landing = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
           {/* Navigation */}
           <nav className="flex items-center justify-between mb-20">
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-                  <span className="text-[#ffffff] font-bold text-xl">O</span>
-                </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent-green rounded-full border-2 border-background" />
-              </div>
-              <div className="flex items-baseline">
-                <span className="text-2xl font-bold text-primary-dark">Opportunity</span>
-                <span className="text-2xl font-light text-foreground">Hub</span>
-              </div>
-            </div>
+           <div className="flex items-center">
+  <div className="scale-145">
+    <Logo />
+  </div>
+</div>
+
+
             <div className="flex items-center gap-4">
               <Link to="/login">
                 <Button variant="ghost">Log in</Button>
@@ -160,15 +156,12 @@ const Landing = () => {
       <footer className="py-8 bg-background border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-                <span className="text-[#ffffff] font-bold text-sm">O</span>
-              </div>
-              <div className="flex items-baseline">
-                <span className="font-semibold text-primary-dark">Opportunity</span>
-                <span className="font-light text-foreground">Hub</span>
-              </div>
-            </div>
+        <div className="flex items-center">
+  <div className="scale-90">
+    <Logo />
+  </div>
+</div>
+
             <p className="text-sm text-muted-foreground">
               © 2025 OpportunityHub. Made for students.
             </p>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import Logo from "@/components/Logo";
 import { useAuth } from '@/lib/auth-context';
 import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -53,18 +54,10 @@ const Login = () => {
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary/15 rounded-full blur-3xl" />
 
         <div className="relative z-10 text-center">
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="relative">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                <span className="text-[#ffffff] font-bold text-3xl">O</span>
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-accent-green rounded-full border-2 border-primary-dark" />
-            </div>
-          </div>
-          <div className="flex items-baseline justify-center gap-0 mb-4">
-            <span className="text-4xl font-bold text-[#ffffff]">Opportunity</span>
-            <span className="text-4xl font-light text-primary">Hub</span>
-          </div>
+        <div className="flex justify-center mb-8 scale-150">
+  <Logo />
+</div>
+
           <p className="text-xl text-[#ffffff]/80 max-w-md">
             Your gateway to hackathons, internships, and career opportunities.
           </p>

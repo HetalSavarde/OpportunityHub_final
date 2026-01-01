@@ -52,5 +52,5 @@ jobs:
 
       - name: List storage objects
         run: |
-          gsutil ls ${{ secrets.GCS_BUCKET }}
+          gsutil ls ${{ secrets.GCP_BUCKET }}
 

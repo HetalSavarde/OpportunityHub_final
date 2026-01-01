@@ -28,10 +28,12 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Create VM instance
+        id: create_instance
         run: |
           REF_NAME="${{ github.ref_name }}"
           # Replace all occurrences of '/' with '-' using shell parameter expansion
-          FORMATTED_NAME="${REF_NAME//\//-}"
+          INSTANCE_SUFFIX="${REF_NAME//\//-}"
+          echo "instance_suffix=$FORMATTED_NAME" >> $GITHUB_OUTPUT
           #create startup script to execute once VM is available
           cat << EOF > startup-vm-script.sh
           cd /OpportunityHub_final/
@@ -47,7 +49,7 @@ jobs:
           pm2 start /OpportunityHub_final/backend/src/index.js >> /var/log/start-script-vm.log 
           EOF
           
-          gcloud compute instances create nodejs-server-vm-${FORMATTED_NAME} \
+          gcloud compute instances create nodejs-server-vm-${INSTANCE_SUFFIX} \
             --zone=asia-south1-a \
             --machine-type=e2-micro \
             --source-machine-image=nodejs-server-v2 \
@@ -55,8 +57,10 @@ jobs:
             --boot-disk-type=pd-standard \
             --tags=http-server \
             --service-account=${{ secrets.GCP_SVC_ACCOUNT }} --scopes=cloud-platform
+            --metadata-from-file=startup-script=startup-vm-script.sh
 
       - name: List vm instances
         run: |
-          gcloud compute instances list --zones=asia-south1-a
+          gcloud compute instances list --zones=asia-south1-a |grep ${{ steps.get_name.outputs.instance_suffix }}" >> $GITHUB_STEP_SUMMARY
+          
 

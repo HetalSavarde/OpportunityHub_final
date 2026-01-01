@@ -17,17 +17,50 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          node-version: '22'
+          credentials_json: ${{ secrets.GCP_SVC_ACCOUNT_KEY }}
 
-      - name: Install fronend dependencies
-        run: |
-          cd frontend
-          npm install
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Build frontend code
+      - name: Create VM instance
+        id: create_instance
         run: |
-          cd frontend
-          npm run build
+          REF_NAME="${{ github.ref_name }}"
+          # Replace all occurrences of '/' with '-' using shell parameter expansion
+          INSTANCE_SUFFIX="${REF_NAME//\//-}"
+          echo "instance_suffix=$FORMATTED_NAME" >> $GITHUB_OUTPUT
+          #create startup script to execute once VM is available
+          cat << EOF > startup-vm-script.sh
+          cd /OpportunityHub_final/
+          sudo git checkout main > /var/log/start-script-vm.log
+          sudo git pull >> /var/log/start-script-vm.log 
+          cd /OpportunityHub_final/frontend
+          sudo npm install >> /var/log/start-script-vm.log 
+          sudo npm run build >> /var/log/start-script-vm.log 
+          sudo cp -Rf ./dist/. /var/www/html/. >> /var/log/start-script-vm.log 
+          sudo systemctl restart nginx >> /var/log/start-script-vm.log 
+          cd /OpportunityHub_final/backend
+          sudo npm install >> /var/log/start-script-vm.log 
+          pm2 start /OpportunityHub_final/backend/src/index.js >> /var/log/start-script-vm.log 
+          EOF
+          
+          gcloud compute instances create nodejs-server-vm-${INSTANCE_SUFFIX} \
+            --zone=asia-south1-a \
+            --machine-type=e2-micro \
+            --source-machine-image=nodejs-server-v2 \
+            --boot-disk-size=10GB \
+            --boot-disk-type=pd-standard \
+            --tags=http-server \
+            --service-account=${{ secrets.GCP_SVC_ACCOUNT }} --scopes=cloud-platform \
+            --metadata-from-file=startup-script=startup-vm-script.sh
+
+      - name: List vm instances
+        run: |
+          gcloud compute instances list --zones=asia-south1-a |grep ${{ steps.create_instance.outputs.instance_suffix }}" >> $GITHUB_STEP_SUMMARY
+          
+

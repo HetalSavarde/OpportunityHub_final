@@ -1,32 +1,40 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+
 import { useAuth } from "@/lib/auth-context";
-import { Opportunity, fetchOpportunities } from "@/services/opportunityService";
+import { OpportunityType } from "@/lib/mock-data";
+import {
+  Opportunity,
+  fetchOpportunities,
+  fetchWishlist,
+} from "@/services/opportunityService";
+
 import Navbar from "@/components/Navbar";
 import OpportunityCard from "@/components/OpportunityCard";
 import FiltersSidebar from "@/components/FiltersSidebar";
 import UpcomingDeadlines from "@/components/UpcomingDeadlines";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 
 const Home = () => {
+  const navigate = useNavigate();
   const { user, isAuthenticated, isLoading: authLoading, toggleWishlist } =
     useAuth();
-  const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState<string | null>(null); // UI only
+  const [selectedTypes, setSelectedTypes] = useState<OpportunityType[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<Opportunity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  /* 🔐 Auth guard */
+  /* ---------------------------------- AUTH ---------------------------------- */
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate("/");
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  /* 🔄 Fetch opportunities (ONLY location + domain) */
+  /* --------------------------- FETCH OPPORTUNITIES --------------------------- */
   useEffect(() => {
     if (!isAuthenticated || !user) return;
 
@@ -48,53 +56,81 @@ const Home = () => {
     loadOpportunities();
   }, [isAuthenticated, user?.location, user?.domains]);
 
-  /* ❤️ Wishlist */
+  /* ----------------------------- FETCH WISHLIST ------------------------------ */
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const loadWishlist = async () => {
+      try {
+        const data = await fetchWishlist(user.uid);
+        setWishlistItems(data);
+      } catch (err) {
+        console.error("Failed to load wishlist:", err);
+      }
+    };
+
+    loadWishlist();
+  }, [user?.uid]);
+
+  /* --------------------------- WISHLIST TOGGLING ------------------------------ */
   const handleWishlistToggle = async (id: string) => {
     await toggleWishlist(id);
+
+    // refresh wishlist after toggle
+    if (user?.uid) {
+      const data = await fetchWishlist(user.uid);
+      setWishlistItems(data);
+    }
   };
 
-  /* 🔍 Local filtering (SAFE) */
+  /* ---------------------------- SEARCH FILTERING ----------------------------- */
   const filteredOpportunities = useMemo(() => {
-    let result = [...opportunities];
+    let data = opportunities;
 
-    // UI Type filter (local only)
-    if (selectedType) {
-      result = result.filter((opp) => opp.type === selectedType);
+    // UI type pills (frontend only)
+    if (selectedTypes.length > 0) {
+      data = data.filter((opp) => selectedTypes.includes(opp.type as any));
     }
 
-    // Search
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (opp) =>
-          opp.title.toLowerCase().includes(q) ||
-          opp.organization.toLowerCase().includes(q) ||
-          opp.domains.some((d) => d.toLowerCase().includes(q))
-      );
-    }
+    if (!searchQuery) return data;
 
-    return result;
-  }, [opportunities, selectedType, searchQuery]);
+    const q = searchQuery.toLowerCase();
+    return data.filter(
+      (opp) =>
+        opp.title.toLowerCase().includes(q) ||
+        opp.organization.toLowerCase().includes(q) ||
+        opp.domains?.some((d) => d.toLowerCase().includes(q))
+    );
+  }, [opportunities, selectedTypes, searchQuery]);
 
-  /* ⏰ Urgent */
-  const urgentCount = opportunities.filter((opp) => {
-    const d = new Date(opp.deadline);
-    const days =
-      (d.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24);
-    return days <= 7;
+  /* ----------------------------- URGENT COUNT -------------------------------- */
+  const urgentCount = filteredOpportunities.filter((opp) => {
+    if (!opp.deadline) return false;
+
+    const daysLeft =
+      (new Date(opp.deadline).getTime() - Date.now()) /
+      (1000 * 60 * 60 * 24);
+
+    return daysLeft <= 7;
   }).length;
 
-  /* 🟣 Type Pills (UI only) */
-  const typeFilters = [
-    { key: null, label: "All" },
-    { key: "hackathon", label: "Hackathons" },
-    { key: "tech-event", label: "Events" },
-    { key: "college-fest", label: "Fests" },
-    { key: "internship", label: "Internships" },
-    { key: "job", label: "Jobs" },
+  /* ------------------------------ TYPE PILLS --------------------------------- */
+  const typeFilters: { type: OpportunityType | "all"; label: string }[] = [
+    { type: "all", label: "All" },
+    { type: "hackathon", label: "Hackathons" },
+    { type: "tech-event", label: "Events" },
+    { type: "college-fest", label: "Fests" },
+    { type: "internship", label: "Internships" },
+    { type: "job", label: "Jobs" },
   ];
 
-  if (authLoading || isLoading) {
+  const handleTypeFilter = (type: OpportunityType | "all") => {
+    if (type === "all") setSelectedTypes([]);
+    else setSelectedTypes([type]);
+  };
+
+  /* -------------------------------- LOADING --------------------------------- */
+  if (authLoading || (isLoading && opportunities.length === 0)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -102,40 +138,45 @@ const Home = () => {
     );
   }
 
+  /* ---------------------------------- UI ------------------------------------ */
   return (
     <div className="min-h-screen bg-background">
-      <Navbar searchQuery={searchQuery} onSearchChange={setSearchQuery} showSearch />
+      <Navbar
+        showSearch
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
 
       <main className="max-w-[1600px] mx-auto px-6 py-6">
         <div className="flex gap-6">
           {/* LEFT */}
-          <div className="hidden lg:block w-64">
+          <div className="hidden lg:block w-64 shrink-0">
             <FiltersSidebar
-              selectedTypes={selectedType ? [selectedType] : []}
-              onTypeChange={() => {}}
-              availableCount={opportunities.length}
-              wishlistedCount={user?.wishlist?.length || 0}
+              selectedTypes={selectedTypes}
+              onTypeChange={setSelectedTypes}
+              availableCount={filteredOpportunities.length}
+              wishlistedCount={wishlistItems.length}
               urgentCount={urgentCount}
             />
           </div>
 
           {/* CENTER */}
           <div className="flex-1">
-            {/* Pills */}
+            {/* Type Pills */}
             <div className="flex gap-2 mb-6 overflow-x-auto">
-              {typeFilters.map((t) => (
+              {typeFilters.map(({ type, label }) => (
                 <Button
-                  key={t.label}
+                  key={type}
                   size="sm"
                   variant={
-                    t.key === selectedType ||
-                    (t.key === null && selectedType === null)
+                    (type === "all" && selectedTypes.length === 0) ||
+                      selectedTypes.includes(type as any)
                       ? "default"
                       : "outline"
                   }
-                  onClick={() => setSelectedType(t.key)}
+                  onClick={() => handleTypeFilter(type)}
                 >
-                  {t.label}
+                  {label}
                 </Button>
               ))}
             </div>
@@ -143,20 +184,20 @@ const Home = () => {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 mb-6">
               <Stat label="Available" value={filteredOpportunities.length} />
-              <Stat label="Wishlisted" value={user?.wishlist?.length || 0} />
+              <Stat label="Wishlisted" value={wishlistItems.length} />
               <Stat label="Urgent" value={urgentCount} danger />
             </div>
 
-            {/* Grid */}
+            {/* Cards */}
             {filteredOpportunities.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredOpportunities.map((opp, i) => (
+              <div className="grid md:grid-cols-2 gap-4">
+                {filteredOpportunities.map((opp, idx) => (
                   <OpportunityCard
                     key={opp.id}
                     opportunity={opp}
-                    isWishlisted={user?.wishlist?.includes(opp.id)}
+                    colorIndex={idx}
+                    isWishlisted={wishlistItems.some((w) => w.id === opp.id)}
                     onWishlistToggle={handleWishlistToggle}
-                    colorIndex={i}
                   />
                 ))}
               </div>
@@ -165,7 +206,7 @@ const Home = () => {
                 <p className="text-muted-foreground">
                   No opportunities found matching your criteria.
                 </p>
-                <Button className="mt-4" onClick={() => setSelectedType(null)}>
+                <Button className="mt-4" onClick={() => setSelectedTypes([])}>
                   Clear Filters
                 </Button>
               </div>
@@ -173,8 +214,12 @@ const Home = () => {
           </div>
 
           {/* RIGHT */}
-          <div className="hidden xl:block w-72">
-            <UpcomingDeadlines opportunities={opportunities} />
+          <div className="hidden xl:block w-72 shrink-0">
+            <UpcomingDeadlines
+              opportunities={
+                wishlistItems.length > 0 ? wishlistItems : opportunities
+              }
+            />
           </div>
         </div>
       </main>
@@ -182,7 +227,7 @@ const Home = () => {
   );
 };
 
-/* 🔢 Small stat card */
+/* ----------------------------- STAT COMPONENT ----------------------------- */
 const Stat = ({
   label,
   value,
@@ -192,11 +237,10 @@ const Stat = ({
   value: number;
   danger?: boolean;
 }) => (
-  <div className="bg-card rounded-xl p-4 border text-center">
+  <div className="bg-card border rounded-xl p-4 text-center">
     <p
-      className={`text-2xl font-bold ${
-        danger ? "text-destructive" : "text-primary-dark"
-      }`}
+      className={`text-2xl font-bold ${danger ? "text-destructive" : "text-primary"
+        }`}
     >
       {value}
     </p>

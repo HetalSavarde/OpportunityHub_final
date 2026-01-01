@@ -61,6 +61,6 @@ jobs:
 
       - name: List vm instances
         run: |
-          gcloud compute instances list --zones=asia-south1-a |grep ${{ steps.get_name.outputs.instance_suffix }}" >> $GITHUB_STEP_SUMMARY
+          gcloud compute instances list --zones=asia-south1-a |grep ${{ steps.create_instance.outputs.instance_suffix }}" >> $GITHUB_STEP_SUMMARY
           
 

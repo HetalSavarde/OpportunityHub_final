@@ -40,3 +40,17 @@ jobs:
           name: Upload artifact
           path: ./frontend/frontend.zip
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_josn: ${{ secrets.GCP_SVC_ACCOUNT_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: List storage objects
+        run: |
+          gsutil ls ${{ secrets.GCS_BUCKET }}
+

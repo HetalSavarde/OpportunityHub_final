@@ -63,6 +63,6 @@ jobs:
 
       - name: List vm instances
         run: |
-          gcloud compute instances list --zones=asia-south1-a |grep "${{ steps.create_instance.outputs.instance_suffix }}"|| awk '{ print $5 }' >> $GITHUB_STEP_SUMMARY
+          echo http://$(gcloud compute instances describe create nodejs-server-vm-${{ steps.create_instance.outputs.instance_suffix }} --format="value( networkInterfaces[0].accessConfigs[0].natIP)" --zone=asia-south1-a) >> $GITHUB_STEP_SUMMARY
           
 

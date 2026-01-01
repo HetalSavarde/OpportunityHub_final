@@ -1,6 +1,8 @@
 name: Deploy to Google Cloud
 
 on:
+  workflow_dispatch:
+
   push:
     tags:
       - 'opphub_v*.*'
@@ -20,12 +22,12 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install dependencies
+      - name: Install fronend dependencies
         run: |
           cd frontend
           npm install
 
-      - name: Build code
+      - name: Build frontend code
         run: |
           cd frontend
           npm run build

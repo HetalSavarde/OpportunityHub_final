@@ -17,29 +17,6 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install fronend dependencies
-        run: |
-          cd frontend
-          npm install
-
-      - name: Build frontend code and zip
-        run: |
-          cd frontend
-          npm run build
-          cd dist
-          zip -r ../frontend.zip ./*
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Upload artifact
-          path: ./frontend/frontend.zip
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -50,12 +27,7 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: List storage objects
+      - name: List vm instances
         run: |
-          gsutil -m rsync -r -d ./frontend/dist/ ${{ secrets.GCP_BUCKET }}/frontend/
-
-      - name: List storage objects
-        run: |
-          gsutil ls -l ${{ secrets.GCP_BUCKET }}
-          gsutil ls -l ${{ secrets.GCP_BUCKET }}/frontend
+          gcloud compute instances list --zone=asia-south1-a
 

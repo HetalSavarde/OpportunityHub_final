@@ -34,6 +34,7 @@ jobs:
           # Replace all occurrences of '/' with '-' using shell parameter expansion
           INSTANCE_SUFFIX="${REF_NAME//\//-}"
           INSTANCE_SUFFIX="${INSTANCE_SUFFIX//./-}"
+          INSTANCE_SUFFIX="${INSTANCE_SUFFIX//_/-}"
           
           echo "instance_suffix=$INSTANCE_SUFFIX" >> $GITHUB_OUTPUT
           

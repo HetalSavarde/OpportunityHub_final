@@ -52,5 +52,10 @@ jobs:
 
       - name: List storage objects
         run: |
-          gsutil ls ${{ secrets.GCP_BUCKET }}
+          gsutil -m rsync -r -d ./frontend/dist/ ${{ secrets.GCP_BUCKET }}/frontend/
+
+      - name: List storage objects
+        run: |
+          gsutil ls -l ${{ secrets.GCP_BUCKET }}
+          gsutil ls -l ${{ secrets.GCP_BUCKET }}/frontend
 

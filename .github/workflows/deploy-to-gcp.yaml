@@ -56,7 +56,7 @@ jobs:
             --boot-disk-size=10GB \
             --boot-disk-type=pd-standard \
             --tags=http-server \
-            --service-account=${{ secrets.GCP_SVC_ACCOUNT }} --scopes=cloud-platform
+            --service-account=${{ secrets.GCP_SVC_ACCOUNT }} --scopes=cloud-platform \
             --metadata-from-file=startup-script=startup-vm-script.sh
 
       - name: List vm instances

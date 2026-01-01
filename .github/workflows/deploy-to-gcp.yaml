@@ -29,5 +29,5 @@ jobs:
 
       - name: List vm instances
         run: |
-          gcloud compute instances list --zone=asia-south1-a
+          gcloud compute instances list --zones=asia-south1-a
 

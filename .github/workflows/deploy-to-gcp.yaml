@@ -42,11 +42,14 @@ jobs:
           sudo git checkout main > /var/log/start-script-vm.log
           sudo git pull >> /var/log/start-script-vm.log 
           cd /OpportunityHub_final/frontend
+          sudo gsutil cp gs://first_project_opportunity_hub/frontend_env .env >> /var/log/start-script-vm.log
           sudo npm install >> /var/log/start-script-vm.log 
           sudo npm run build >> /var/log/start-script-vm.log 
           sudo cp -Rf ./dist/. /var/www/html/. >> /var/log/start-script-vm.log 
           sudo systemctl restart nginx >> /var/log/start-script-vm.log 
           cd /OpportunityHub_final/backend
+          sudo gsutil cp gs://first_project_opportunity_hub/backend_env .env >> /var/log/start-script-vm.log
+          sudo gsutil cp gs://first_project_opportunity_hub/firebaseKey.json firebaseKey.json >> /var/log/start-script-vm.log
           sudo npm install >> /var/log/start-script-vm.log 
           pm2 start /OpportunityHub_final/backend/src/index.js >> /var/log/start-script-vm.log 
           EOF
